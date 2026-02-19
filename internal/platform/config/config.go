@@ -1,8 +1,10 @@
 package config
 
 import (
+	"bytes"
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -31,10 +33,15 @@ type MCPConfig struct {
 }
 
 func New() (*Config, error) {
-	_ = godotenv.Load()
+	loadEnvFile()
+
+	configSource, err := resolveConfigSource()
+	if err != nil {
+		return nil, fmt.Errorf("failed to load config: %w", err)
+	}
 
 	provider, err := uconfig.NewYAML(
-		uconfig.File("config/base.yaml"),
+		configSource,
 		uconfig.Expand(os.LookupEnv),
 	)
 	if err != nil {
@@ -51,6 +58,38 @@ func New() (*Config, error) {
 	}
 
 	return &cfg, nil
+}
+
+func loadEnvFile() {
+	_ = godotenv.Load()
+
+	execPath, err := os.Executable()
+	if err == nil {
+		execDir := filepath.Dir(execPath)
+		_ = godotenv.Load(filepath.Join(execDir, ".env"))
+	}
+}
+
+func resolveConfigSource() (uconfig.YAMLOption, error) {
+	candidates := []string{
+		"config/base.yaml",
+	}
+
+	execPath, err := os.Executable()
+	if err == nil {
+		execDir := filepath.Dir(execPath)
+		candidates = append([]string{
+			filepath.Join(execDir, "config", "base.yaml"),
+		}, candidates...)
+	}
+
+	for _, path := range candidates {
+		if data, err := os.ReadFile(path); err == nil {
+			return uconfig.Source(bytes.NewReader(data)), nil
+		}
+	}
+
+	return nil, fmt.Errorf("config/base.yaml not found (checked paths relative to executable and CWD)")
 }
 
 func (c *Config) validate() error {

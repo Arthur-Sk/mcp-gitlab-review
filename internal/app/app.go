@@ -8,6 +8,7 @@ import (
 
 	"github.com/mark3labs/mcp-go/server"
 	"go.uber.org/fx"
+	"go.uber.org/fx/fxevent"
 	"go.uber.org/zap"
 
 	"mcp-gitlab-review/internal/module/diff"
@@ -20,6 +21,9 @@ import (
 )
 
 var Module = fx.Options(
+	fx.WithLogger(func(log *zap.Logger) fxevent.Logger {
+		return &fxevent.ZapLogger{Logger: log}
+	}),
 	config.Module,
 	logger.Module,
 	cache.Module,

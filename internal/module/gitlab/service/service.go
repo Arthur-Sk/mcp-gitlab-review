@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"go.uber.org/zap"
 
@@ -44,7 +45,7 @@ func (s *Service) GetMRSummary(ctx context.Context, projectPath string, mrIID in
 	} else {
 		messages := make([]string, 0, len(commits))
 		for _, c := range commits {
-			messages = append(messages, c.Message)
+			messages = append(messages, strings.Trim(c.Message, "\n "))
 		}
 		mr.CommitMessages = messages
 	}
