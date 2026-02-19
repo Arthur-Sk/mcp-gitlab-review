@@ -1,0 +1,11 @@
+gitlab:
+  apiURL: "${GITLAB_API_URL:https://gitlab.com/api/v4}"
+  token: "${GITLAB_PERSONAL_ACCESS_TOKEN}"
+
+cache:
+  ttl: 5m
+  maxSize: 1000
+
+mcp:
+  name: "gitlab-review"
+  version: "1.0.0"
